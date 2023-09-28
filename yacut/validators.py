@@ -5,7 +5,7 @@ from yacut.models import URLMap
 
 def validate_short_id(short_id, type="view"):
     try:
-        if re.search('["а-яА-Я!@#$%\s^&*.,:;<>?/\|{}\[\]_+=\-")]', short_id):
+        if re.search(r'["а-яА-Я!@#$%\s^&*.,:;<>?/\|{}\[\]_+=\-")]', short_id):
             return "Указано недопустимое имя для короткой ссылки", 400
     except TypeError:
         pass

@@ -14,11 +14,13 @@ def create_urlmap():
         raise InvalidAPIUsage('Отсутствует тело запроса', 400)
     if "url" not in data:
         raise InvalidAPIUsage('"url" является обязательным полем!', 400)
-    if ("custom_id" not in data.keys() or
+    if (
+        "custom_id" not in data.keys() or
         data["custom_id"] == "" or
         data["custom_id"] is None
     ):
         data.update({"custom_id": get_unique_short_id()})
+        # страховка от совпадений идентификаторов
         while URLMap.query.filter_by(short=data["custom_id"]).first() is not None:
             data.update({"custom_id": get_unique_short_id()})
     message, code = validate_short_id(data['custom_id'], type='api')
