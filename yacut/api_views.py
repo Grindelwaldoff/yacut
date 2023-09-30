@@ -4,7 +4,6 @@ from yacut import app, db
 from yacut.models import URLMap
 from yacut.utils import get_unique_short_id
 from yacut.error_handlers import InvalidAPIUsage
-from yacut.validators import validate_short_id
 
 
 @app.route("/api/id/", methods=["POST"])
@@ -20,7 +19,6 @@ def create_urlmap():
         data["custom_id"] is None
     ):
         data.update({"custom_id": get_unique_short_id()})
-        # страховка от совпадений идентификаторов
     if URLMap.find_by_short(short=data["custom_id"]):
         raise InvalidAPIUsage(f'Имя "{data["custom_id"]}" уже занято.', 400)
     instance = URLMap()
