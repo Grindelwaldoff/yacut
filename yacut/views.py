@@ -13,7 +13,7 @@ from yacut.forms import UrlForm
 def index_view():
     form = UrlForm()
     if form.validate_on_submit():
-        short_url = get_unique_short_id()
+        short_url = URLMap.get_unique_short_id()
         if form.custom_id.data:
             short_url = form.custom_id.data
             message, code = validate_short_id(short_url)

@@ -1,11 +1,12 @@
 import re
-
+from random import choices
 from datetime import datetime
 from urllib.parse import urljoin
 
 from flask import request
 
 from yacut import db
+from settings import SHORT_GENERATE_ALPHABET
 from yacut.error_handlers import InvalidAPIUsage
 
 
@@ -16,7 +17,7 @@ class URLMap(db.Model):
     short = db.Column(db.String(128), nullable=False, default=None)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-    def save(self, data):
+    def from_dict(self, data):
         for field, value in {'url': 'original', 'custom_id': 'short'}.items():
             if field in data:
                 if field == 'custom_id':
@@ -36,9 +37,21 @@ class URLMap(db.Model):
                             "Указано недопустимое имя для короткой ссылки",
                             400
                         )
+                    # if URLMap.find_by_short(data[field]):
+                    #     raise InvalidAPIUsage(
+                    #         f'Имя "{data[field]}" уже занято.', 400
+                    #     )
             setattr(self, value, data[field])
 
-    def todict(self):
+    @staticmethod
+    def get_unique_short_id():
+        return ''.join(choices(SHORT_GENERATE_ALPHABET, k=6))
+
+    def save(self, db):
+        db.session.add(self)
+        db.session.commit()
+
+    def to_dict(self):
         return dict(
             short_link=urljoin(request.base_url.replace('api/id/', ''), self.short),
             url=self.original,
