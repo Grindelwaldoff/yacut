@@ -1,12 +1,10 @@
 import re
 from random import choices
-from datetime import datetime
-from urllib.parse import urljoin
 
 from flask import request
 
 from yacut import db
-from settings import SHORT_GENERATE_ALPHABET
+from settings import SHORT_FIELD_LENGTH, SHORT_GENERATE_ALPHABET
 from yacut.error_handlers import InvalidAPIUsage
 
 
@@ -18,6 +16,12 @@ class URLMap(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def from_dict(self, data):
+        if (
+            "custom_id" not in data.keys() or
+            data["custom_id"] == "" or
+            data["custom_id"] is None
+        ):
+            data.update({"custom_id": self.get_unique_short_id()})
         for field, value in {'url': 'original', 'custom_id': 'short'}.items():
             if field in data:
                 if field == 'custom_id':
@@ -32,32 +36,33 @@ class URLMap(db.Model):
                             )
                     except TypeError:
                         pass
-                    if len(data[field]) > 16:
+                    if len(data[field]) > max(*SHORT_FIELD_LENGTH):
                         raise InvalidAPIUsage(
                             "Указано недопустимое имя для короткой ссылки",
                             400
                         )
-                    # if URLMap.find_by_short(data[field]):
-                    #     raise InvalidAPIUsage(
-                    #         f'Имя "{data[field]}" уже занято.', 400
-                    #     )
+                    if self.get(short=data[field]):
+                        raise InvalidAPIUsage(
+                            f'Имя "{data["custom_id"]}" уже занято.',
+                            400
+                        )
             setattr(self, value, data[field])
 
-    @staticmethod
-    def get_unique_short_id():
-        return ''.join(choices(SHORT_GENERATE_ALPHABET, k=6))
-
-    def save(self, db):
+    def save(self):
         db.session.add(self)
         db.session.commit()
 
-    def to_dict(self):
+    def todict(self):
         return dict(
             short_link=urljoin(request.base_url.replace('api/id/', ''), self.short),
             url=self.original,
         )
 
     @staticmethod
-    def find_by_short(short):
+    def get_unique_short_id():
+        return ''.join(choices(SHORT_GENERATE_ALPHABET, k=6))
+
+    @staticmethod
+    def get(short):
         # не понял как сдесь можно использовать get()
         return URLMap.query.filter_by(short=short).first()
