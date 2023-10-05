@@ -1,9 +1,6 @@
 import re
 from random import choices
 
-from datetime import datetime
-from urllib.parse import urljoin
-
 from flask import request
 
 from yacut import db
