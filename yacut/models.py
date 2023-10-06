@@ -45,7 +45,7 @@ class URLMap(db.Model):
                         )
                     if self.get(short=data[field]):
                         raise InvalidAPIUsage(
-                            f'Имя "{data["custom_id"]}" уже занято.',
+                            f'Имя {data["custom_id"]} уже занято!',
                             400
                         )
             setattr(self, value, data[field])
