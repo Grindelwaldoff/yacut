@@ -11,6 +11,6 @@ def validate_short_id(short_id):
     except TypeError:
         pass
     if URLMap.get(short=short_id):
-        return f'Имя {short_id} уже занято!'
+        return 'Предложенный вариант короткой ссылки уже существует.'
     if len(short_id) > max(*SHORT_FIELD_LENGTH):
         return "Указано недопустимое имя для короткой ссылки"
