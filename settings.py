@@ -1,10 +1,11 @@
 import os
-from string import ascii_letters
+from string import ascii_letters, digits
 
 
-SHORT_GENERATE_ALPHABET = ascii_letters + '1234567890'
+SHORT_GENERATE_ALPHABET = ascii_letters + digits
 URL_FIELD_LENGTH = (1, 1000)
 SHORT_FIELD_LENGTH = (0, 16)
+SHORT_GENERATE_CONST = 6
 
 
 class Config(object):

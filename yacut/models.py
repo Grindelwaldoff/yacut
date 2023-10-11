@@ -6,51 +6,49 @@ from datetime import datetime
 from flask import request
 
 from yacut import db
-from settings import SHORT_FIELD_LENGTH, SHORT_GENERATE_ALPHABET
+from settings import (
+    SHORT_FIELD_LENGTH, SHORT_GENERATE_ALPHABET,
+    URL_FIELD_LENGTH, SHORT_GENERATE_CONST
+)
 from yacut.error_handlers import InvalidAPIUsage
 
 
 class URLMap(db.Model):
     """Таблица в которой хранятся все ссылки и их вариации."""
     id = db.Column(db.Integer, primary_key=True)
-    original = db.Column(db.String(256), nullable=False)
-    short = db.Column(db.String(128), nullable=False, default=None)
+    original = db.Column(db.String(URL_FIELD_LENGTH[1]), nullable=False)
+    short = db.Column(db.String(SHORT_FIELD_LENGTH[1]), nullable=False, default=None)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-    def from_dict(self, data):
-        if (
-            "custom_id" not in data.keys() or
-            data["custom_id"] == "" or
-            data["custom_id"] is None
-        ):
-            data.update({"custom_id": self.get_unique_short_id()})
+    @staticmethod
+    def validation(short_id):
+        try:
+            if not re.search(r'^[a-zA-Z0-9]+$', short_id):
+                return "Указано недопустимое имя для короткой ссылки"
+        except TypeError:
+            pass
+        if URLMap.get(short=short_id):
+            return 'Предложенный вариант короткой ссылки уже существует.'
+        if len(short_id) > max(*SHORT_FIELD_LENGTH):
+            return "Указано недопустимое имя для короткой ссылки"
+
+    @staticmethod
+    def from_dict(data):
+        url_map = URLMap()
         for field, value in {'url': 'original', 'custom_id': 'short'}.items():
-            if field in data:
-                if field == 'custom_id':
-                    try:
-                        if re.search(
-                            r'["а-яА-Я!@#$%\s^&*.,:;<>?/\|{}\[\]_+=\-")]',
-                            data[field]
-                        ):
-                            raise InvalidAPIUsage(
-                                "Указано недопустимое имя для короткой ссылки",
-                                400
-                            )
-                    except TypeError:
-                        pass
-                    if len(data[field]) > max(*SHORT_FIELD_LENGTH):
-                        raise InvalidAPIUsage(
-                            "Указано недопустимое имя для короткой ссылки",
-                            400
-                        )
-                    if self.get(short=data[field]):
-                        raise InvalidAPIUsage(
-                            'Предложенный вариант короткой ссылки уже существует.',
-                            400
-                        )
-            setattr(self, value, data[field])
+            try:
+                if field == 'custom_id' and data[field] not in ('', None):
+                    error_msg = URLMap.validation(data[field])
+                    if error_msg:
+                        return error_msg
+                setattr(url_map, value, data[field])
+            except KeyError:
+                pass
+        return url_map
 
     def save(self):
+        if self.short in ('', None):
+            setattr(self, 'short', URLMap.get_unique_short_id())
         db.session.add(self)
         db.session.commit()
 
@@ -62,7 +60,7 @@ class URLMap(db.Model):
 
     @staticmethod
     def get_unique_short_id():
-        return ''.join(choices(SHORT_GENERATE_ALPHABET, k=6))
+        return ''.join(choices(SHORT_GENERATE_ALPHABET, k=SHORT_GENERATE_CONST))
 
     @staticmethod
     def get(short):

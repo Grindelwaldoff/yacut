@@ -13,9 +13,11 @@ def create_urlmap():
     if "url" not in data:
         raise InvalidAPIUsage('"url" является обязательным полем!', 400)
     instance = URLMap()
-    instance.from_dict(data)
-    instance.save()
-    return jsonify(instance.todict()), 201
+    answer = instance.from_dict(data)
+    if isinstance(answer, str):
+        raise InvalidAPIUsage(answer, 400)
+    answer.save()
+    return jsonify(answer.todict()), 201
 
 
 @app.route("/api/id/<string:short_id>/", methods=["GET"])

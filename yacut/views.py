@@ -3,7 +3,6 @@ from urllib.parse import urljoin
 from flask import render_template, abort, flash, request, Markup, redirect
 
 from yacut import app
-from yacut.validators import validate_short_id
 from yacut.models import URLMap
 from yacut.forms import UrlForm
 
@@ -15,7 +14,7 @@ def index_view():
         short_url = URLMap.get_unique_short_id()
         if form.custom_id.data:
             short_url = form.custom_id.data
-            message = validate_short_id(short_url)
+            message = URLMap.validation(short_url)
             if message:
                 flash(message)
                 return render_template('content.html', form=form), 400
