@@ -11,6 +11,7 @@ from settings import (
     URL_FIELD_LENGTH, SHORT_GENERATE_CONST
 )
 
+
 class URLMap(db.Model):
     """Таблица в которой хранятся все ссылки и их вариации."""
     id = db.Column(db.Integer, primary_key=True)
