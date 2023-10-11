@@ -10,8 +10,6 @@ from settings import (
     SHORT_FIELD_LENGTH, SHORT_GENERATE_ALPHABET,
     URL_FIELD_LENGTH, SHORT_GENERATE_CONST
 )
-from yacut.error_handlers import InvalidAPIUsage
-
 
 class URLMap(db.Model):
     """Таблица в которой хранятся все ссылки и их вариации."""
