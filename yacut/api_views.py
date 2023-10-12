@@ -12,11 +12,11 @@ def create_urlmap():
         raise InvalidAPIUsage('Отсутствует тело запроса', 400)
     if "url" not in data:
         raise InvalidAPIUsage('"url" является обязательным полем!', 400)
-    instance = URLMap()
-    answer = instance.from_dict(data)
-    if isinstance(answer, str):
-        raise InvalidAPIUsage(answer, 400)
-    answer.save()
+    answer = URLMap.from_dict(data)
+    try:
+        answer.save()
+    except ValueError as e:
+        raise InvalidAPIUsage(str(e), 400)
     return jsonify(answer.todict()), 201
 
 

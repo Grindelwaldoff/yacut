@@ -21,25 +21,16 @@ class URLMap(db.Model):
 
     @staticmethod
     def validation(short_id):
-        try:
-            if not re.search(r'^[a-zA-Z0-9]+$', short_id):
-                return "Указано недопустимое имя для короткой ссылки"
-        except TypeError:
-            pass
+        if not re.search(r'^[a-zA-Z0-9]{,16}$', short_id):
+            raise ValueError("Указано недопустимое имя для короткой ссылки")
         if URLMap.get(short=short_id):
-            return 'Предложенный вариант короткой ссылки уже существует.'
-        if len(short_id) > max(*SHORT_FIELD_LENGTH):
-            return "Указано недопустимое имя для короткой ссылки"
+            raise ValueError('Предложенный вариант короткой ссылки уже существует.')
 
     @staticmethod
     def from_dict(data):
         url_map = URLMap()
         for field, value in {'url': 'original', 'custom_id': 'short'}.items():
             try:
-                if field == 'custom_id' and data[field] not in ('', None):
-                    error_msg = URLMap.validation(data[field])
-                    if error_msg:
-                        return error_msg
                 setattr(url_map, value, data[field])
             except KeyError:
                 pass
@@ -47,7 +38,8 @@ class URLMap(db.Model):
 
     def save(self):
         if self.short in ('', None):
-            setattr(self, 'short', URLMap.get_unique_short_id())
+            self.short = URLMap.get_unique_short_id()
+        self.validation(self.short)
         db.session.add(self)
         db.session.commit()
 
@@ -63,5 +55,4 @@ class URLMap(db.Model):
 
     @staticmethod
     def get(short):
-        # не понял как сдесь можно использовать get()
         return URLMap.query.filter_by(short=short).first()

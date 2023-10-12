@@ -14,15 +14,15 @@ def index_view():
         short_url = URLMap.get_unique_short_id()
         if form.custom_id.data:
             short_url = form.custom_id.data
-            message = URLMap.validation(short_url)
-            if message:
-                flash(message)
-                return render_template('content.html', form=form), 400
         instance = URLMap(
             original=form.original_link.data,
             short=short_url
         )
-        instance.save()
+        try:
+            instance.save()
+        except ValueError as message:
+            flash(str(message))
+            return render_template('content.html', form=form), 400
         url = urljoin(request.base_url, short_url)
         flash(Markup(
               f'<a href="{url}">{url}</a>'))
