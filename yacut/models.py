@@ -21,7 +21,7 @@ class URLMap(db.Model):
 
     @staticmethod
     def validation(short_id):
-        if not re.search(r'^[a-zA-Z0-9]{,16}$', short_id):
+        if not re.search(rf'^[a-zA-Z0-9]{{,{SHORT_FIELD_LENGTH[1]}}}$', short_id):
             raise ValueError("Указано недопустимое имя для короткой ссылки")
         if URLMap.get(short=short_id):
             raise ValueError('Предложенный вариант короткой ссылки уже существует.')
@@ -29,15 +29,13 @@ class URLMap(db.Model):
     @staticmethod
     def from_dict(data):
         url_map = URLMap()
-        for field, value in {'url': 'original', 'custom_id': 'short'}.items():
-            try:
-                setattr(url_map, value, data[field])
-            except KeyError:
-                pass
+        url_map.original = data['url']
+        if 'custom_id' in data:
+            url_map.short = data['custom_id']
         return url_map
 
     def save(self):
-        if self.short in ('', None):
+        if not self.short:
             self.short = URLMap.get_unique_short_id()
         self.validation(self.short)
         db.session.add(self)
